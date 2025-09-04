@@ -49,6 +49,18 @@ module.exports = class HTMLRewriter {
 
       var sample = `https://github.githubassets.com/images/modules/site/home/globe-700.jpg 700w,https://github.githubassets.com/images/modules/site/home/globe.jpg 1400w`
 
+      // Process CSS in style tags before JSDOM parsing
+      document.querySelectorAll('style').forEach(styleNode => {
+        if (styleNode.textContent && ctx.rewrite.CSSRewriter) {
+          try {
+            styleNode.textContent = new ctx.rewrite.CSSRewriter(ctx).process(styleNode.textContent);
+          } catch (e) {
+            // If CSS rewriting fails, clear the content to prevent JSDOM parsing errors
+            styleNode.textContent = '';
+          }
+        }
+      });
+
       HTML_REWRITE_CONFIG.forEach((_config) => {
         if (_config.action[0]=='rewrite') {
           _config.tags.forEach((tag) => {
